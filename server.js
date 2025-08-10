@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import cloudinary from "./src/config/cloudinary.js";
 import newsRouter from "./src/routes/news.routes.js";
 import categoryRouter from "./src/routes/category.routes.js";
+import commentRouter from "./src/routes/comment.route.js";
 
 dotenv.config();
 
@@ -25,8 +26,9 @@ app.get("/",(req,res)=>{
 
 //Routing
 app.use("/api",userRouter);
-app.use("api/create" , newsRouter)
-app.use("/api/category",categoryRouter)
+app.use("/api/news" , newsRouter);
+app.use("/api/category",categoryRouter);
+app.use("/api/comment",commentRouter)
 
 
 

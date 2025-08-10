@@ -1,3 +1,5 @@
+import cloudinary from "../config/cloudinary.js";
+
 export const uploadToCloudinary = async (files) => {
   const results = await Promise.all(
     files.map((file) => {
@@ -15,4 +17,30 @@ export const uploadToCloudinary = async (files) => {
   );
 
   return results; // array of image URLs
+};
+
+
+
+//extract public Id for deletion
+
+export const extractPublicId = (url) => {
+  try {
+    
+    // https://res.cloudinary.com/demo/image/upload/v1690909090/foldername/filename.jpg
+    // We need: foldername/filename (without extension)
+
+    const parts = url.split("/");
+    const fileWithExt = parts.pop();                                               // filename.jpg
+    const publicId = fileWithExt.substring(0, fileWithExt.lastIndexOf("."));        // filename
+
+    // If the image is in a folder, keep the folder path
+
+    const folderPath = parts.slice(parts.indexOf("upload") + 1).join("/");
+
+    return `${folderPath}/${publicId}`;
+    
+  } catch (err) {
+    console.error("Failed to extract public_id from URL:", err.message);
+    return null;
+  }
 };

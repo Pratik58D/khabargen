@@ -50,4 +50,5 @@ newsArticleSchema.index({
   },
 });
 
-export default mongoose.model("NewsArticle", newsArticleSchema);
+const newsModel = mongoose.model("NewsArticle", newsArticleSchema);
+export default newsModel;

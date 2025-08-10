@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 const commentSchema = new mongoose.Schema({
   newsId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "NewsArticle",
+    ref: "newsModel",
     required: true
   },
   username: {
@@ -24,12 +24,9 @@ const commentSchema = new mongoose.Schema({
     type: String,
     required: true,
     trim: true
-  },
-  status: {
-    type: String,
-    enum: ["pending", "approved", "rejected"],
-    default: "pending"
   }
 }, { timestamps: true });
 
-export default mongoose.model("Comment", commentSchema);
+const CommentModel = mongoose.model("Comment", commentSchema);
+
+export default CommentModel;

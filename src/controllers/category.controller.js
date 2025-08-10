@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import categorySchema from "../models/category.model.js"
+import Category from "../models/category.model.js"
 
 
 // Create new category
@@ -9,16 +9,27 @@ export const createCategory = async (req, res) => {
     if (!name) {
       return res.status(400).json({ message: "Category name is required" });
     }
-    const existing = await categorySchema.findOne({ name });
+    const existing = await Category.findOne({ name });
     if (existing) {
       return res.status(409).json({ message: "Category already exists" });
     }
-    const slug = slugify(name, { lower: true, strict: true });
-    const category = new categorySchema({ name, slug });
+    const slug = slugify(name, { lower: true, strict: true });   
+    const category = new Category({ name, slug });
     await category.save();
-    res.status(201).json({ success: true, category });
+    res.status(201).json({ success: true, data : category });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Delete category (admin only)
+export const deleteCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await Category.findByIdAndDelete(id);
+    res.json({ success: true, message: "Category deleted" });
+  } catch (error) {
+    res.status(500).json({ message: "Error deleting category", error: error.message });
   }
 };
 
@@ -50,13 +61,26 @@ export const getCategoryBySlug = async (req, res) => {
   }
 };
 
-// Delete category (admin only)
-export const deleteCategory = async (req, res) => {
+
+
+//searching and sorting categories
+export const searchCategories = async (req, res) => {
   try {
-    const { id } = req.params;
-    await Category.findByIdAndDelete(id);
-    res.json({ success: true, message: "Category deleted" });
+    const { search } = req.query;
+
+    const query = {};
+
+  // serching with resect to name and slug
+    if (search) {
+      const regex = new RegExp(search, "i"); 
+      query.$or = [{ name: regex }, { slug: regex }];
+    }
+
+    //sorting alphabetically
+    const categories = await Category.find(query); 
+
+    res.json({ success: true, data : categories });
   } catch (error) {
-    res.status(500).json({ message: "Error deleting category", error: error.message });
+    res.status(500).json({ message: "Search failed", error: error.message });
   }
 };
