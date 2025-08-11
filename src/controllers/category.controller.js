@@ -81,7 +81,9 @@ export const searchCategories = async (req, res) => {
     // serching with resect to name , slug or province
     if (search) {
       const regex = new RegExp(search, "i");
-      query.$or = [{ name: regex }, { slug: regex }];
+      query.$or = [
+        { name: regex },
+         { slug: regex }];
     }
 
     // Filter directly by province if provided separately
@@ -96,7 +98,7 @@ export const searchCategories = async (req, res) => {
       sort: { name: 1 },
     });
 
-    // Fetch top 5 news for each category
+    // Fetch top 5 news for each category + + populate comments for each category's news
 
     const categoriesWithNews = await Promise.all(
       categoriesPaginated.data.map(async (cat) => {
@@ -104,7 +106,13 @@ export const searchCategories = async (req, res) => {
           .find({ category: cat._id })
           .sort({ createdAt: -1 })
           .limit(5)
-          .select("title description slug images date");
+          .select("title description slug images date")
+          .populate({
+            path: "comments",
+            // match: { status: "approved" },    // only approved comments
+            select: "username commentText createdAt",
+            options: { sort: { createdAt: -1 } }
+          })
 
         return {
           ...cat.toObject(),
@@ -113,9 +121,7 @@ export const searchCategories = async (req, res) => {
       })
     );
 
-    //sorting alphabetically
-    const categories = await Category.find(query).sort({ name: 1 });
-
+   
     res.json({
       success: true,
       page: categoriesPaginated.page,
