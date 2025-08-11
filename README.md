@@ -149,3 +149,6 @@ npm install
 - GET /api/comments?newsId=xxx — get comments for a news (supports page & limit)
 - PUT /api/comments/:id — update comment (admin/moderator or via moderation)
 - DELETE /api/comments/:id — delete comment (admin)
+
+### License
+- authur: pratik devkota
