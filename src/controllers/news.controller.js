@@ -1,6 +1,9 @@
 import newsModel from "../models/news.model.js";
 import slugify from "slugify";
-import { extractPublicId, uploadToCloudinary } from "../utilies/imageHandling.js";
+import {
+  extractPublicId,
+  uploadToCloudinary,
+} from "../utilies/imageHandling.js";
 import Category from "../models/category.model.js";
 
 // Admin: CREATE
@@ -15,9 +18,9 @@ export const createNews = async (req, res) => {
         .json({ message: "Missing required fields or images." });
     }
     let slug = slugify(title, { lower: true, strict: true });
-    
-   console.log(slug)
-    
+
+    console.log(slug);
+
     const exists = await newsModel.findOne({ slug });
     console.log(exists);
 
@@ -34,12 +37,13 @@ export const createNews = async (req, res) => {
       date,
     });
     await news.save();
-    res.status(201).json({ success: true, message: "News created",data : news });
+    res
+      .status(201)
+      .json({ success: true, message: "News created", data: news });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
-
 
 //  Admin: UPDATE
 export const updateNews = async (req, res) => {
@@ -50,28 +54,34 @@ export const updateNews = async (req, res) => {
 
     if (title) {
       let slug = slugify(title, { lower: true, strict: true });
-      const exists = await newsModel.findOne({ slug, _id: { $ne: req.params.id } });
+      const exists = await newsModel.findOne({
+        slug,
+        _id: { $ne: req.params.id },
+      });
       if (exists) slug += "-" + Date.now();
       updateFields.slug = slug;
-    };
+    }
 
-     if (category) {
+    if (category) {
       const categoryDoc = await Category.findOne({ name: category.trim() });
       if (!categoryDoc) {
         return res.status(404).json({ message: "Category not found" });
       }
-      updateFields.category = categoryDoc._id; 
+      updateFields.category = categoryDoc._id;
     }
-
 
     if (files && files.length > 0) {
       const imageUrls = await uploadToCloudinary(files);
       updateFields.images = imageUrls;
     }
 
-     const updatedNews = await newsModel.findByIdAndUpdate(req.params.id, updateFields, {
-      new: true,
-    });
+    const updatedNews = await newsModel.findByIdAndUpdate(
+      req.params.id,
+      updateFields,
+      {
+        new: true,
+      }
+    );
 
     res.json({ success: true, data: updatedNews });
   } catch (error) {
@@ -92,10 +102,9 @@ export const deleteNews = async (req, res) => {
 
     //  Delete images from Cloudinary if stored there
     // You would need to store Cloudinary public_ids in your news.images array for this
-   
 
     for (const imageUrl of news.images) {
-      const publicId = extractPublicId(imageUrl); 
+      const publicId = extractPublicId(imageUrl);
       await cloudinary.uploader.destroy(publicId);
     }
 
@@ -107,47 +116,41 @@ export const deleteNews = async (req, res) => {
   }
 };
 
+//public :Get paginated news with comments and category
 
-//public
-export const getNews = async(req,res) =>{
-
+export const getNews = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const search = req.query.search || "";
 
     // const query = { status: "approved" };   // only approved news
-    const query = {}
+    const query = {};
+    const skip = (page - 1) * limit;
 
-     const skip = (page - 1) * limit;
-
-      if (search) {
+    if (search) {
       const regex = new RegExp(search, "i");
-      query.$or = [
-        { title: regex },
-        { description: regex },
-        {slug  :regex}
-      ];
+      query.$or = [{ title: regex }, { description: regex }, { slug: regex }];
     }
 
-     // Parallel queries: get news + total count
+    // Parallel queries: get news + total count
     const [newsList, total] = await Promise.all([
-      newsModel.find(query)
-        .sort({ date: -1 })          // latest news first
+      newsModel
+        .find(query)
+        .sort({ date: -1 }) // latest news first
         .skip(skip)
         .limit(limit)
         .populate("category", "name slug")
-        .lean(),                     // plain JS objects for performance
-      newsModel.countDocuments(query)
+        .populate({
+          path: "comments",
+          select: "username commentText createdAt",
+          options: { sort: { createdAt: -1 } },
+        })
+        .lean(), // plain JS objects for performance
+      newsModel.countDocuments(query),
     ]);
 
-    
-    // Optionally: populate comments for each news item (just approved ones)
-    // const newsWithComments = await Promise.all(newsList.map(async news => {
-    //   const comments = await Comment.find({ newsId: news._id, status: "approved" }).select("username commentText createdAt").lean();
-    //   return { ...news, comments };
-    // }));
-      res.json({
+    return res.json({
       success: true,
       page,
       limit,
@@ -155,33 +158,35 @@ export const getNews = async(req,res) =>{
       totalPages: Math.ceil(total / limit),
       data: newsList,
     });
-
-    
-  }  catch (error) {
-    res.status(500).json({ message: "Failed to get news", error: error.message });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Failed to get news", error: error.message });
   }
-
-}
-
+};
 
 //  Get one news article by slug (with category and comments)
 export const getNewsBySlug = async (req, res) => {
   try {
     const { slug } = req.params;
-    const news = await newsModel.findOne({ slug, status: "approved" })
+    const news = await newsModel
+      .findOne({ slug, status: "approved" })
       .populate("category", "name slug")
+      .populate({
+        path: "comments",
+        select: "username commentText createdAt",
+        options: { sort: { createdAt: -1 } },
+      })
       .lean();
 
     if (!news) {
       return res.status(404).json({ message: "News article not found" });
     }
 
-    // const comments = await Comment.find({ newsId: news._id, status: "approved" })
-    //   .select("username commentText createdAt")
-    //   .lean();
-
-    res.json({ success: true, data: { ...news, comments } });
+    return res.json({ success: true, data: { ...news, comments } });
   } catch (error) {
-    res.status(500).json({ message: "Failed to get news article", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Failed to get news article", error: error.message });
   }
 };

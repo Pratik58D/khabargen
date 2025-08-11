@@ -37,6 +37,7 @@ const newsArticleSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  
 }, { timestamps: true });
 
 // Text index for search
@@ -49,6 +50,19 @@ newsArticleSchema.index({
     description: 4,
   },
 });
+
+
+newsArticleSchema.virtual("comments",{
+  ref : "Comment",
+   localField: "_id",  
+   foreignField: "newsId",
+    justOne: false 
+});
+
+// Enable virtuals in JSON and Object output
+newsArticleSchema.set("toObject", { virtuals: true });
+newsArticleSchema.set("toJSON", { virtuals: true });
+
 
 const newsModel = mongoose.model("NewsArticle", newsArticleSchema);
 export default newsModel;

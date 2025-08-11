@@ -1,4 +1,3 @@
-// models/Category.js
 import mongoose from "mongoose";
 
 const categorySchema = new mongoose.Schema({
@@ -13,6 +12,20 @@ const categorySchema = new mongoose.Schema({
     required: true,
     unique: true,
     lowercase: true
+  },
+  province: {
+    type: String,
+    enum: [
+      "koshi",
+      "madesh",
+      "bagmati",
+      "gandaki",
+      "lumbini",
+      "karnali",
+      "sudurpashchim"
+    ],
+    default : null,
+    required: true
   }
 }, { timestamps: true });
 
