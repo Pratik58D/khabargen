@@ -81,9 +81,7 @@ export const searchCategories = async (req, res) => {
     // serching with resect to name , slug or province
     if (search) {
       const regex = new RegExp(search, "i");
-      query.$or = [
-        { name: regex },
-         { slug: regex }];
+      query.$or = [{ name: regex }, { slug: regex }];
     }
 
     // Filter directly by province if provided separately
@@ -111,8 +109,8 @@ export const searchCategories = async (req, res) => {
             path: "comments",
             // match: { status: "approved" },    // only approved comments
             select: "username commentText createdAt",
-            options: { sort: { createdAt: -1 } }
-          })
+            options: { sort: { createdAt: -1 } },
+          });
 
         return {
           ...cat.toObject(),
@@ -121,7 +119,6 @@ export const searchCategories = async (req, res) => {
       })
     );
 
-   
     res.json({
       success: true,
       page: categoriesPaginated.page,
