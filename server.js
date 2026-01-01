@@ -7,6 +7,7 @@ import cloudinary from "./src/config/cloudinary.js";
 import newsRouter from "./src/routes/news.routes.js";
 import categoryRouter from "./src/routes/category.routes.js";
 import commentRouter from "./src/routes/comment.route.js";
+import errorHandling from "./src/middleware/errorhandling.js";
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use("/api/category",categoryRouter);
 app.use("/api/comment",commentRouter)
 
 
+app.use(errorHandling);
 
 app.listen(Port , ()=>{
     console.log(`server is running at ${Port}`);

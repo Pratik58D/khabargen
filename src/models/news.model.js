@@ -11,10 +11,6 @@ const newsArticleSchema = new mongoose.Schema({
     unique: true,
     lowercase: true,
   },
-  images: {
-    type: [String],        // array of image URLs
-    default: [],
-  },
   category: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Category",
@@ -24,6 +20,31 @@ const newsArticleSchema = new mongoose.Schema({
     type: String,
     default: "",
   },
+  media :{
+    type : {
+      type : String,
+      emum : ["image" , "video"],
+      required : true
+    },
+
+    images :{
+    type : [String],
+    default : []
+    },
+
+    video :{
+      url : String,
+      provider :{
+        type : String,
+        enum : ["s3" , "youtube" , "vimeo", "other"]
+      },
+      duration : Number,
+      thumbnail : String
+
+    }
+
+  },
+  
   date: {
     type: Date,
     required: true,
@@ -33,7 +54,7 @@ const newsArticleSchema = new mongoose.Schema({
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
-  count: {
+  view: {
     type: Number,
     default: 0,
   },
@@ -57,12 +78,14 @@ newsArticleSchema.virtual("comments",{
    localField: "_id",  
    foreignField: "newsId",
     justOne: false 
-});
-
-// Enable virtuals in JSON and Object output
-newsArticleSchema.set("toObject", { virtuals: true });
-newsArticleSchema.set("toJSON", { virtuals: true });
-
-
-const newsModel = mongoose.model("NewsArticle", newsArticleSchema);
-export default newsModel;
+  });
+  
+  // Enable virtuals in JSON and Object output
+  newsArticleSchema.set("toObject", { virtuals: true });
+  newsArticleSchema.set("toJSON", { virtuals: true });
+  
+  
+  const newsModel = mongoose.model("NewsArticle", newsArticleSchema);
+  export default newsModel;
+  
+  
