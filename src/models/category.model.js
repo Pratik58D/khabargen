@@ -4,7 +4,6 @@ const categorySchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    unique: true,
     trim: true
   },
   slug: {
@@ -13,21 +12,10 @@ const categorySchema = new mongoose.Schema({
     unique: true,
     lowercase: true
   },
-  province: {
-    type: String,
-    enum: [
-      "koshi",
-      "madesh",
-      "bagmati",
-      "gandaki",
-      "lumbini",
-      "karnali",
-      "sudurpashchim"
-    ],
-    default : null,
-    required: true
-  }
 }, { timestamps: true });
 
- const Category = mongoose.model("Category", categorySchema);
+//unique per slug
+categorySchema.index({slug : 1} , {unique : true});
+
+const Category = mongoose.model("Category", categorySchema);
 export default  Category;

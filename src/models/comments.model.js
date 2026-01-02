@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 const commentSchema = new mongoose.Schema({
   newsId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "newsModel",
+    ref: "NewsArticle",
     required: true
   },
   username: {

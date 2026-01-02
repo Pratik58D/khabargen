@@ -11,12 +11,12 @@ const mediaSchema = new mongoose.Schema({
         default: []
     },
     video: {
-        url: String,     
+        url: String,
         provider: {
             type: String,
-            enum: ["s3", "youtube", "vimeo", "other"]
+            enum: ["self", "youtube", "vimeo", "other"]
         },
-        duration: Number, // in seconds
+        duration: Number,
         thumbnail: String
     }
 }, { _id: false });
@@ -26,7 +26,6 @@ const newsArticleSchema = new mongoose.Schema({
     slug: {
         type: String,
         required: true,
-        unique: true,
         lowercase: true
     },
     category: {
@@ -34,19 +33,34 @@ const newsArticleSchema = new mongoose.Schema({
         ref: "Category",
         required: true
     },
+    province: {
+        type: String,
+        enum: [
+            "koshi",
+            "madesh",
+            "bagmati",
+            "gandaki",
+            "lumbini",
+            "karnali",
+            "sudurpashchim",
+            "national"
+        ],
+        required: true
+    },
     status: {
         type: String,
-        enum: ["pending", "approved", "rejected"],
+        enum: ["draft", "pending", "approved", "rejected"],
         default: "pending"
     },
     views: {
         type: Number,
         default: 0
     },
-    date: {
+    publishedAt: {
         type: Date,
         required: true
     },
+
     content: {
         np: {
             title: { type: String, required: true },
@@ -64,6 +78,11 @@ const newsArticleSchema = new mongoose.Schema({
     { timestamps: true });
 
 
+
+//slug lookup
+newsArticleSchema.index({slug : 1} , {unique : true});
+
+
 // Text index for search
 newsArticleSchema.index({
     "content.np.title": "text",
@@ -76,13 +95,11 @@ newsArticleSchema.index({
         "content.en.title": 5,
         "content.np.body": 3,
         "content.en.body": 3,
-        "content.en.body": 3
     }
 });
 
 
 // virtual comments
-
 newsArticleSchema.virtual("comments", {
     ref: "Comment",
     localField: "_id",
